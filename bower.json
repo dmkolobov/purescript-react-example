@@ -9,6 +9,9 @@
     "purescript-react-dom": "^6.0.0",
     "purescript-console": "^4.0.0",
     "purescript-react": "^6.0.0",
-    "purescript-web-html": "^1.0.0"
+    "purescript-web-html": "^1.0.0",
+    "purescript-signal": "^10.1.0",
+    "purescript-record": "^1.0.0", 
+    "purescript-record-extra": "^1.0.0"
   }
 }

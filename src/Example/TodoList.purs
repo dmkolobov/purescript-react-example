@@ -6,10 +6,12 @@ import Effect (Effect)
 
 import Data.Array (filter)
 import Data.Maybe (Maybe)
+import Signal as S
 
 import React as React
 import React.DOM as DOM
 import React.DOM.Props as Props
+import Reframe as Reframe
 
 import Example.TodoForm (todoFormClass)
 import Example.TodoItem (todoItemClass)
@@ -23,6 +25,15 @@ type TodoListProps
     , onDone :: Todo -> Effect Unit
     , onClear :: Todo -> Effect Unit
     }
+
+type TestProps = { message :: String }
+
+reframeTest :: React.ReactClass TestProps
+reframeTest = Reframe.component "reframeTest" f s 
+  where f :: TestProps -> String -> React.ReactElement
+        f { message } val = DOM.div [] [ DOM.div' [ DOM.text message ] 
+                                       , DOM.div' [ DOM.text val ]]
+        s = S.constant "bar"
 
 todoListClass :: React.ReactClass TodoListProps
 todoListClass = React.component "TodoList" component
@@ -42,7 +53,8 @@ todoListClass = React.component "TodoList" component
       } =
       DOM.div
         [ ]
-        [ React.createLeafElement todoFormClass
+        [ React.createLeafElement reframeTest { message : "foo" }
+        , React.createLeafElement todoFormClass
             { todo
             , onEdit
             , onAdd
