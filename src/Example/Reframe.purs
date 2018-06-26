@@ -1,8 +1,11 @@
-module Reframe where 
+module Reframe
+  ( class EventClass 
+  , step 
+  , component
+  , app ) where 
 
 import Prelude 
 
-import Effect (Effect)
 import Effect.Console (log)
 
 import Signal.Channel as C 
@@ -11,6 +14,15 @@ import Signal as S
 import React as React
 import Record.Extra as RC
 import Prim.RowList as RL
+
+class EventClass e a where 
+  step :: e -> a -> a
+
+app :: forall e a. (EventClass e a)
+    => a 
+    -> C.Channel e 
+    -> S.Signal a 
+app state' events = S.foldp step state' (C.subscribe events)
 
 component :: forall props a rl
            . RL.RowToList props rl 

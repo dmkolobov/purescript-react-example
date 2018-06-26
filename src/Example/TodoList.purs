@@ -28,12 +28,13 @@ type TodoListProps
 
 type TestProps = { message :: String }
 
-reframeTest :: React.ReactClass TestProps
-reframeTest = Reframe.component "reframeTest" f s 
-  where f :: TestProps -> String -> React.ReactElement
-        f { message } val = DOM.div [] [ DOM.div' [ DOM.text message ] 
+renderTest :: TestProps -> String -> React.ReactElement 
+renderTest { message } val = DOM.div [] [ DOM.div' [ DOM.text message ] 
                                        , DOM.div' [ DOM.text val ]]
-        s = S.constant "bar"
+
+reframeTest :: React.ReactClass TestProps
+reframeTest = Reframe.component "reframeTest" renderTest s 
+  where s = S.constant "bar"
 
 todoListClass :: React.ReactClass TodoListProps
 todoListClass = React.component "TodoList" component

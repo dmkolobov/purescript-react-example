@@ -16,6 +16,8 @@ import Partial.Unsafe (unsafePartial)
 
 import React as React
 import ReactDOM as ReactDOM
+import Reframe as Reframe
+import Signal.Channel as C
 
 import Example.TodoList (todoListClass)
 import Example.Types (Todo(..), TodoStatus(..))
@@ -33,8 +35,34 @@ main = void $ do
 
   let
       element' = unsafePartial (fromJust element)
+  
+  events <- C.channel NOOP 
+  loop <- Reframe.app (AppState {todo : Nothing, todos : []}) events
 
   ReactDOM.render (React.createLeafElement mainClass { }) element'
+
+data AppEvent = NOOP
+              | Add Todo 
+              | Edit Todo 
+              | Done Todo 
+              | Clear Todo 
+
+newtype AppState = AppState { todo :: Maybe Todo
+                            , todos :: Array Todo
+                            }
+
+instance appEvent :: Reframe.EventClass AppEvent AppState where 
+  step NOOP (AppState state)          = AppState state
+  step (Add todo') (AppState state)   = AppState $ state { todo = Nothing 
+                                                         , todos = snoc state.todos todo'}
+  step (Edit todo') (AppState state)  = AppState $ state { todo = Just todo' }
+  step (Done todo') (AppState state)  = AppState $ state { todos = setStatus state.todos todo' TodoDone }
+  step (Clear todo') (AppState state) = AppState $ state { todos = setStatus state.todos todo' TodoCleared } 
+
+setStatus :: Array Todo -> Todo -> TodoStatus -> Array Todo
+setStatus todos todo status = fromMaybe todos $ do
+  i <- elemIndex todo todos
+  modifyAt i (\(Todo a) -> Todo a { status = status }) todos
 
 mainClass :: React.ReactClass { }
 mainClass = React.component "Main" component
