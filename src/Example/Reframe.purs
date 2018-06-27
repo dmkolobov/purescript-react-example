@@ -20,9 +20,9 @@ class EventClass e a where
 
 app :: forall e a. (EventClass e a)
     => a 
-    -> C.Channel e 
+    -> S.Signal e 
     -> S.Signal a 
-app state' events = S.foldp step state' (C.subscribe events)
+app state' events = S.foldp step state' events
 
 component :: forall props a rl
            . RL.RowToList props rl 

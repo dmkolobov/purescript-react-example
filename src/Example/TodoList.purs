@@ -30,7 +30,7 @@ type TestProps = { message :: String }
 
 renderTest :: TestProps -> String -> React.ReactElement 
 renderTest { message } val = DOM.div [] [ DOM.div' [ DOM.text message ] 
-                                       , DOM.div' [ DOM.text val ]]
+                                        , DOM.div' [ DOM.text val ]]
 
 reframeTest :: React.ReactClass TestProps
 reframeTest = Reframe.component "reframeTest" renderTest s 

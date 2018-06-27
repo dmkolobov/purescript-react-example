@@ -12,12 +12,14 @@ import Web.DOM.NonElementParentNode (getElementById) as DOM
 import Web.HTML (window) as DOM
 import Web.HTML.Window (document) as DOM
 
+import Effect.Console (log)
 import Partial.Unsafe (unsafePartial)
 
 import React as React
 import ReactDOM as ReactDOM
 import Reframe as Reframe
 import Signal.Channel as C
+import Signal as S
 
 import Example.TodoList (todoListClass)
 import Example.Types (Todo(..), TodoStatus(..))
@@ -36,13 +38,19 @@ main = void $ do
   let
       element' = unsafePartial (fromJust element)
   
-  events <- C.channel NOOP 
-  loop <- Reframe.app (AppState {todo : Nothing, todos : []}) events
 
-  ReactDOM.render (React.createLeafElement mainClass { }) element'
+  events <- C.channel NOOP 
+
+  let 
+    eventsSig = C.subscribe events
+
+  let states = Reframe.app (AppState {todo : Nothing, todos : []}) eventsSig
+
+
+  ReactDOM.render (React.createLeafElement (mainClass events states) { }) element'
 
 data AppEvent = NOOP
-              | Add Todo 
+              | Add Todo  
               | Edit Todo 
               | Done Todo 
               | Clear Todo 
@@ -64,44 +72,24 @@ setStatus todos todo status = fromMaybe todos $ do
   i <- elemIndex todo todos
   modifyAt i (\(Todo a) -> Todo a { status = status }) todos
 
-mainClass :: React.ReactClass { }
-mainClass = React.component "Main" component
+mainClass :: C.Channel AppEvent -> S.Signal AppState -> React.ReactClass { }
+mainClass channel states = React.component "Main" component
   where
-  component this =
-    pure { state:
-            { todo: Nothing
-            , todos: []
-            }
-         , render: render <$> React.getState this
+  component this = do
+    log "main render"
+    pure { state : {}
+         , render: (render <$> S.get states)
          }
     where
     render
-      { todo
-      , todos
-      } =
+      (AppState { todo, todos }) =
       React.createLeafElement todoListClass
         { todos
         , todo
-
-        , onAdd: \todo' -> React.modifyState this \a ->
-            a { todo = Nothing
-              , todos = snoc a.todos todo'
-              }
-
-        , onEdit: \todo' -> React.modifyState this
-            _ { todo = Just todo'
-              }
-
-        , onDone: \todo' -> React.modifyState this \a ->
-            a { todos = setStatus a.todos todo' TodoDone
-              }
-
-        , onClear : \todo' -> React.modifyState this \a ->
-            a { todos = setStatus a.todos todo' TodoCleared
-              }
+        , onAdd   : \todo' -> C.send channel (Add todo')
+        , onEdit  : \todo' -> do 
+                      log "edit" 
+                      C.send channel (Edit todo')
+        , onDone  : \todo' -> C.send channel (Done todo')
+        , onClear : \todo' -> C.send channel (Clear todo')
         }
-
-    setStatus todos todo status = fromMaybe todos $ do
-      i <- elemIndex todo todos
-
-      modifyAt i (\(Todo a) -> Todo a { status = status }) todos
