@@ -77,19 +77,20 @@ mainClass channel states = React.component "Main" component
   where
   component this = do
     log "main render"
-    pure { state : {}
+    pure { state : { gen : 0 }
          , render: (render <$> S.get states)
          }
     where
+    dispatch event = do 
+      React.modifyState this (\{ gen } -> { gen : gen + 1 } )
+      C.send channel event
     render
       (AppState { todo, todos }) =
       React.createLeafElement todoListClass
         { todos
         , todo
-        , onAdd   : \todo' -> C.send channel (Add todo')
-        , onEdit  : \todo' -> do 
-                      log "edit" 
-                      C.send channel (Edit todo')
-        , onDone  : \todo' -> C.send channel (Done todo')
-        , onClear : \todo' -> C.send channel (Clear todo')
+        , onAdd   : \todo' -> dispatch (Add todo')
+        , onEdit  : \todo' -> dispatch (Edit todo')
+        , onDone  : \todo' -> dispatch (Done todo')
+        , onClear : \todo' -> dispatch (Clear todo')
         }
